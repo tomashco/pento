@@ -1,0 +1,6 @@
+erlang 27.0.1
+elixir 1.17.2-otp-27
+nodejs 20.8.1
+yarn 1.22.10
+terraform 1.9.8
+vault 1.18.2

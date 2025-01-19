@@ -1,0 +1,28 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/base:bookworm
+    stdin_open: true
+    tty: true
+    volumes:
+      - ..:/workspaces/pento:cached
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4001:4001"
+      - "5174:5173"
+    environment:
+      DEV_CONTAINER: true
+      POSTGRES_PASSWORD: postgres
+      DB_HOST: db
+  db:
+    image: postgres:16
+    stdin_open: true
+    tty: true
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

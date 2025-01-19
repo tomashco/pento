@@ -4,7 +4,7 @@ import Config
 config :pento, Pento.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "localhost",
+  hostname: "db",
   database: "pento_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,

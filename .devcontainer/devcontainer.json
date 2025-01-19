@@ -1,0 +1,42 @@
+{
+  "name": "Pento",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "onCreateCommand": [".devcontainer/on-create-command.sh"],
+  "postAttachCommand": [".devcontainer/post-attach-command.sh"],
+  "shutdownAction": "stopCompose",
+  "workspaceFolder": "/workspaces/pento",
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided",
+      "ppa": false
+    },
+    "ghcr.io/ChristopherMacGown/devcontainer-features/direnv:1": {
+      "version": "v2.35.0"
+    }
+  },
+  "forwardPorts": ["app:4001", "app:5174", "db:5433"],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "JakeBecker.elixir-ls",
+        "mkhl.direnv",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "GitLab.gitlab-workflow",
+        "eamodio.gitlens",
+        "phoenixframework.phoenix",
+        "tamasfe.even-better-toml",
+        "cweijan.vscode-postgresql-client2",
+        "hashicorp.terraform",
+        "redhat.vscode-yaml"
+      ],
+      "settings": {
+        "direnv.path.executable": "/usr/local/bin/direnv",
+        "terraform.languageServer.terraform.path": "/home/vscode/.asdf/shims/terraform",
+        "direnv.restart.automatic": true
+      }
+    }
+  }
+}
