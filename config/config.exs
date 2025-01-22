@@ -29,7 +29,28 @@ config :pento, PentoWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :pento, Pento.Mailer, adapter: Swoosh.Adapters.Local
+# config :pento, Pento.Mailer, adapter: Swoosh.Adapters.Local
+
+# config :pento, Pento.Mailer,
+#   adapter: Swoosh.Adapters.Gmail,
+#   access_token: System.get_env("GMAIL_API_KEY")
+
+config :pento, Pento.Mailer,
+  adapter: Swoosh.Adapters.SMTP,
+  relay: System.get_env("SMTP_HOST"),
+  username: System.get_env("MAILER_USERNAME"),
+  password: System.get_env("MAILER_PASSWORD"),
+  auth: :always,
+  ssl: false,
+  tls: :always,
+  tls_options: [
+    versions: [:"tlsv1.3"],
+    verify: :verify_peer,
+    cacerts: :public_key.cacerts_get(),
+    server_name_indication: ~c"#{System.get_env("MAILER_INDICATION")}",
+    depth: 99
+  ],
+  no_mx_lookups: false
 
 # Configure esbuild (the version is required)
 config :esbuild,

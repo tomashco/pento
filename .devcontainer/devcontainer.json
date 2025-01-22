@@ -2,8 +2,12 @@
   "name": "Pento",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
-  "onCreateCommand": [".devcontainer/on-create-command.sh"],
-  "postAttachCommand": [".devcontainer/post-attach-command.sh"],
+  "onCreateCommand": [
+    ".devcontainer/on-create-command.sh"
+  ],
+  "postAttachCommand": [
+    ".devcontainer/post-attach-command.sh"
+  ],
   "shutdownAction": "stopCompose",
   "workspaceFolder": "/workspaces/pento",
   "remoteUser": "vscode",
@@ -16,7 +20,11 @@
       "version": "v2.35.0"
     }
   },
-  "forwardPorts": ["app:4001", "app:5174", "db:5433"],
+  "forwardPorts": [
+    "app:4001",
+    "app:5174",
+    "db:5433"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
