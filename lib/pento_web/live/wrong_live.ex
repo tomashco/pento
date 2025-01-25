@@ -1,14 +1,13 @@
 defmodule PentoWeb.WrongLive do
   use PentoWeb, :live_view
 
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     {:ok,
      assign(socket,
        score: 10,
        message: "Make a guess:",
        solution: solution(),
-       is_winning?: false,
-       session_id: session["live_socket_id"]
+       is_winning?: false
      )}
   end
 
