@@ -3,3 +3,22 @@
     Please fill out our survey
   </Component.hero>
 </section>
+<%= if @demographic do %>
+  <DemographicLive.Show.details demographic={@demographic} />
+<% else %>
+  <h2>Demographic Form coming soon!</h2>
+<% end %>
+<div class="flex flex-col gap-4 mt-4">
+  <Component.title heading="Section 1">
+    this is the beginning of section one
+  </Component.title>
+  <hr class="w-full" />
+  <Component.title heading="Section 2">
+    second section
+  </Component.title>
+  <hr class="w-full" />
+
+  <Component.title heading="Section 3">
+    third section
+  </Component.title>
+</div>
