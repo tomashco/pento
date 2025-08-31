@@ -2,6 +2,9 @@
 
 source .devcontainer/_functions.sh;
 
+# Add non-free to debian
+sudo sed -i 's/Components: main/Components: main non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources
+
 sudo apt-get update;
 DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
     autoconf \
@@ -18,12 +21,26 @@ DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
     libxml2-utils \
     m4 \
     xsltproc \
-    postgresql-common;
+    postgresql-common \
+    pkg-config \
+    libssl-dev && rm -rf /var/lib/apt/lists/* \
+    libsrtp2-dev \
+    libvpx-dev \
+    libfdk-aac-dev \
+    libmp3lame-dev \
+    libmad0-dev \
+    libopus-dev
+
+# symlink lame.pc to mp3lame.pc for membrane
+sudo ln -s /usr/lib/aarch64-linux-gnu/pkgconfig/lame.pc /usr/lib/aarch64-linux-gnu/pkgconfig/mp3lame.pc
 
 # Install postgresql-client 16
 sudo YES=true /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh;
-sudo apt-get update;
-DEBIAN_FRONTEND=noninteractive sudo apt-get install -y postgresql-client-16;
+sudo apt-get update
+DEBIAN_FRONTEND=noninteractive sudo apt-get install -y postgresql-client-16 
+
+# set PKG_CONFIG_PATH for librstp2
+export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
 
 # Imported from _functions.sh
 set_erlang_locale;
