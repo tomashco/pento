@@ -30,7 +30,7 @@ let csrfToken = document
 let Hooks = {};
 const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
 Hooks.Capture = createCaptureHook(iceServers);
-Hooks.Player = createPlayerHook(iceServers)
+Hooks.Player = createPlayerHook(iceServers);
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },

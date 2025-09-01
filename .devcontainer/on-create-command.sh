@@ -29,7 +29,10 @@ DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
     libfdk-aac-dev \
     libmp3lame-dev \
     libmad0-dev \
-    libopus-dev
+    libopus-dev \
+    portaudio19-dev \
+    cargo \
+    rustc
 
 # symlink lame.pc to mp3lame.pc for membrane
 sudo ln -s /usr/lib/aarch64-linux-gnu/pkgconfig/lame.pc /usr/lib/aarch64-linux-gnu/pkgconfig/mp3lame.pc

@@ -20,6 +20,16 @@ if System.get_env("PHX_SERVER") do
   config :pento, PentoWeb.Endpoint, server: true
 end
 
+openai_api_key =
+  System.get_env("OPENAI_API_KEY") ||
+    raise """
+    environment variable OPENAI_API_KEY is missing.
+    You can set it in config/runtime.exs or as an environment variable.
+    """
+
+config :pento,
+  openai_api_key: openai_api_key
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
