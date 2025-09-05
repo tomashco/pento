@@ -1,4 +1,4 @@
-defmodule Pento.VAD do
+defmodule MembraneOpenAI.VAD do
   use Membrane.Filter
 
   def_input_pad(:input,

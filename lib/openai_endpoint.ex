@@ -24,7 +24,10 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
   def handle_buffer(:input, buffer, _ctx, state) do
     audio = Base.encode64(buffer.payload)
     frame = %{type: "input_audio_buffer.append", audio: audio} |> Jason.encode!()
-    :ok = MembraneOpenAI.OpenAIWebSocket.send_frame(state.ws, frame)
+
+    :ok =
+      MembraneOpenAI.OpenAIWebSocket.send_frame(state.ws, frame)
+
     {[], state}
   end
 
@@ -32,7 +35,9 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
   def handle_info({:websocket_frame, {:text, frame}}, _ctx, state) do
     case Jason.decode!(frame) do
       %{"type" => "response.audio.delta", "delta" => delta} ->
-        audio_payload = Base.decode64!(delta)
+        audio_payload =
+          Base.decode64!(delta)
+
         {[buffer: {:output, %Membrane.Buffer{payload: audio_payload}}], state}
 
       %{"type" => "response.audio.done"} ->

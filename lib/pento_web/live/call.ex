@@ -22,7 +22,7 @@ defmodule PentoWeb.CallLive do
           id: "mediaCapture",
           signaling: ingress_signaling,
           video?: false,
-          audio?: false,
+          audio?: true,
           preview?: false
         )
         |> Membrane.WebRTC.Live.Player.attach(
