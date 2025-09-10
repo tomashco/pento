@@ -31,10 +31,10 @@ defmodule MembraneOpenAI.Pipeline do
       |> child(:input_opus_parser, Membrane.Opus.Parser)
       |> child(:opus_decoder, %Membrane.Opus.Decoder{sample_rate: 24_000})
       # |> child(:vad, MembraneOpenAI.VAD)
-      |> child(:open_ai, %MembraneOpenAI.OpenAIEndpoint{websocket_opts: openai_ws_opts}),
 
       # Output path: OpenAI → Browser
-      get_child(:open_ai)
+      # |> child(:open_ai, %MembraneOpenAI.OpenAIEndpoint{websocket_opts: openai_ws_opts}),
+      # get_child(:open_ai)
       |> via_out(:output)
       |> child(:raw_audio_parser, %Membrane.RawAudioParser{overwrite_pts?: true})
       |> child(:realtimer, Membrane.Realtimer)

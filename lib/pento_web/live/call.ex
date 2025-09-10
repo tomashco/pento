@@ -25,10 +25,11 @@ defmodule PentoWeb.CallLive do
           audio?: true,
           preview?: false
         )
-        |> Membrane.WebRTC.Live.Player.attach(
-          id: "audioPlayer",
-          signaling: egress_signaling
-        )
+
+        # |> Membrane.WebRTC.Live.Player.attach(
+        #   id: "audioPlayer",
+        #   signaling: egress_signaling
+        # )
       else
         socket
       end
@@ -39,7 +40,7 @@ defmodule PentoWeb.CallLive do
   def render(assigns) do
     ~H"""
     <Membrane.WebRTC.Live.Capture.live_render socket={@socket} capture_id="mediaCapture" />
-    <Membrane.WebRTC.Live.Player.live_render socket={@socket} player_id="audioPlayer" />
+    <%!-- <Membrane.WebRTC.Live.Player.live_render socket={@socket} player_id="audioPlayer" /> --%>
     """
   end
 end
