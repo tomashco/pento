@@ -4,7 +4,7 @@ defmodule PentoWeb.CallLive do
   alias Membrane
   alias WebRTC
   alias Membrane.WebRTC.SignalingChannel
-  alias MembraneOpenAI.Pipeline
+  alias Pento.Call.Pipeline
 
   def mount(_params, _session, socket) do
     socket =
@@ -12,9 +12,10 @@ defmodule PentoWeb.CallLive do
         ingress_signaling = Membrane.WebRTC.Signaling.new()
         egress_signaling = Membrane.WebRTC.Signaling.new()
 
-        Membrane.Pipeline.start_link(MembraneOpenAI.Pipeline,
+        Membrane.Pipeline.start_link(Pipeline,
           source_channel: ingress_signaling,
-          sink_channel: egress_signaling
+          sink_channel: egress_signaling,
+          stt_service: :deepgram
         )
 
         socket
@@ -25,11 +26,10 @@ defmodule PentoWeb.CallLive do
           audio?: true,
           preview?: false
         )
-
-        # |> Membrane.WebRTC.Live.Player.attach(
-        #   id: "audioPlayer",
-        #   signaling: egress_signaling
-        # )
+        |> Membrane.WebRTC.Live.Player.attach(
+          id: "audioPlayer",
+          signaling: egress_signaling
+        )
       else
         socket
       end
@@ -40,7 +40,7 @@ defmodule PentoWeb.CallLive do
   def render(assigns) do
     ~H"""
     <Membrane.WebRTC.Live.Capture.live_render socket={@socket} capture_id="mediaCapture" />
-    <%!-- <Membrane.WebRTC.Live.Player.live_render socket={@socket} player_id="audioPlayer" /> --%>
+    <Membrane.WebRTC.Live.Player.live_render socket={@socket} player_id="audioPlayer" />
     """
   end
 end

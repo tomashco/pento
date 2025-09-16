@@ -27,8 +27,16 @@ openai_api_key =
     You can set it in config/runtime.exs or as an environment variable.
     """
 
+deepgram_api_key =
+  System.get_env("DEEPGRAM_API_KEY") ||
+    raise """
+    environment variable DEEPGRAM_API_KEY is missing.
+    You can set it in config/runtime.exs or as an environment variable.
+    """
+
 config :pento,
-  openai_api_key: openai_api_key
+  openai_api_key: openai_api_key,
+  deepgram_api_key: deepgram_api_key
 
 if config_env() == :prod do
   database_url =
