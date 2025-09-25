@@ -72,12 +72,10 @@ defmodule Pento.Call.Pipeline do
       |> via_out(:output, options: [kind: :audio])
       |> child(:input_opus_parser, Membrane.Opus.Parser)
       |> child(:opus_decoder, %Membrane.Opus.Decoder{sample_rate: 24_000})
-      # |> child(:vad, MembraneOpenAI.VAD)
 
       # Output path: OpenAI → Browser
-      |> child(:open_ai, %MembraneOpenAI.OpenAIEndpoint{websocket_opts: openai_ws_opts}),
-      get_child(:open_ai)
-      |> via_out(:output)
+      |> child(:open_ai, %MembraneOpenAI.OpenAIEndpoint{websocket_opts: openai_ws_opts})
+      |> child(:buffer_discarder, Membrane.BufferDiscarder)
       |> child(:raw_audio_parser, %Membrane.RawAudioParser{overwrite_pts?: true})
       |> child(:realtimer, Membrane.Realtimer)
       |> child(:opus_encoder, Membrane.Opus.Encoder)

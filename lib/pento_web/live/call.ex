@@ -15,7 +15,7 @@ defmodule PentoWeb.CallLive do
         Membrane.Pipeline.start_link(Pipeline,
           source_channel: ingress_signaling,
           sink_channel: egress_signaling,
-          stt_service: :deepgram
+          stt_service: :openai
         )
 
         socket

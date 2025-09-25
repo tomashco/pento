@@ -34,9 +34,33 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
   @impl true
   def handle_info({:websocket_frame, {:text, frame}}, _ctx, state) do
     case Jason.decode!(frame) do
+      %{"type" => "session.updated"} ->
+        Membrane.Logger.info("session updatedddd")
+        {[], state}
+
+      %{"type" => "function_call", "name" => name} ->
+        Membrane.Logger.info("FUNCTION CALL: #{name}")
+        {[], state}
+
+      %{"type" => "input_audio_buffer.speech_started"} ->
+        Membrane.Logger.info("User is Speaking, stop talking")
+
+        # Cancel the current response from OpenAI
+        frame = %{type: "response.cancel"} |> Jason.encode!()
+
+        :ok =
+          MembraneOpenAI.OpenAIWebSocket.send_frame(state.ws, frame)
+
+        flush_event = %Membrane.BufferDiscarder.Events.Flush{}
+
+        {[
+           event: {:output, flush_event},
+           event: {:output, %Membrane.Realtimer.Events.Reset{}}
+         ], state}
+
       %{"type" => "response.audio.delta", "delta" => delta} ->
-        audio_payload =
-          Base.decode64!(delta)
+        Membrane.Logger.info("sending response to buffer")
+        audio_payload = Base.decode64!(delta)
 
         {[buffer: {:output, %Membrane.Buffer{payload: audio_payload}}], state}
 
