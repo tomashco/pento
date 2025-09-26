@@ -14,14 +14,10 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
   def_input_pad(:input, accepted_format: _any)
   def_output_pad(:output, accepted_format: _any, flow_control: :push)
 
-  def_options(
-    websocket_opts: [],
-    pace_ms: [
-      spec: pos_integer(),
-      default: 40,
-      description: "The interval in milliseconds between sending each buffer."
-    ]
-  )
+  def_options(websocket_opts: [])
+
+  # time in nanoseconds -> 100 millis
+  @interval 200_000_000
 
   @impl true
   def handle_init(_ctx, opts) do
@@ -30,9 +26,7 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
     state = %{
       ws: ws,
       queue: :queue.new(),
-      # Tracks if the timer is running
-      timer: nil,
-      pace_ms: opts.pace_ms
+      timer_status: nil
     }
 
     {[], state}
@@ -40,15 +34,15 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
 
   @impl true
   def handle_playing(_ctx, state) do
+    # Standard format for OpenAI voice streaming, the audio sent to openai
     Membrane.Logger.info("Starting audio streaming and setting format.")
-    # Standard format for OpenAI voice streaming
     format = %Membrane.RawAudio{channels: 1, sample_rate: 24_000, sample_format: :s16le}
     {[stream_format: {:output, format}], state}
   end
 
-  # This pad receives user audio input, which is immediately forwarded to the WebSocket.
   @impl true
   def handle_buffer(:input, buffer, _ctx, state) do
+    # This pad receives user audio input, which is immediately forwarded to the WebSocket.
     audio = Base.encode64(buffer.payload)
     frame = %{type: "input_audio_buffer.append", audio: audio} |> Jason.encode!()
 
@@ -58,28 +52,39 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
     {[], state}
   end
 
-  # Core pacing logic, executed every `pace_ms`
+  # Timer that sends buffer to output pad
   @impl true
   def handle_tick(:pacer, _ctx, state) do
+    Membrane.Logger.info(
+      "Calling handle_tick, #{:queue.len(state.queue)}, timer status: #{state.timer_status}"
+    )
+
     case :queue.out(state.queue) do
       {:empty, _queue} ->
         # Queue is empty, stop the timer until new audio arrives
         Membrane.Logger.info("Pacing done, queue empty. Stopping timer.")
-        {[stop_timer: :pacer], %{state | timer: nil}}
+        {[stop_timer: :pacer], %{state | timer_status: nil}}
 
       {{:value, buffer_to_send}, rest_of_queue} ->
         # Found a buffer, send it downstream
         actions = [buffer: {:output, buffer_to_send}]
 
-        if :queue.is_empty(rest_of_queue) do
-          # Last buffer was sent, stop the timer
-          Membrane.Logger.info("Last paced buffer sent.")
-          {actions ++ [stop_timer: :pacer], %{state | queue: rest_of_queue, timer: nil}}
-        else
-          # More buffers remain, restart the timer for the next interval
-          {actions ++ [start_timer: {:pacer, state.pace_ms}], %{state | queue: rest_of_queue}}
-        end
+        Membrane.Logger.info("Sending buffer")
+        # More buffers remain, restart the timer for the next interval
+        {
+          actions ++
+            [],
+          %{
+            state
+            | queue: rest_of_queue
+          }
+        }
     end
+  end
+
+  @impl true
+  def get_time() do
+    :os.system_time(:millisecond)
   end
 
   @impl true
@@ -99,15 +104,17 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
         frame = %{type: "response.cancel"} |> Jason.encode!()
         :ok = MembraneOpenAI.OpenAIWebSocket.send_frame(state.ws, frame)
 
-        # Internal flush logic: stop timer, clear queue, and send Reset event downstream
+        timer_is_running = !is_nil(state.timer_status)
+
         actions =
-          if state.timer do
-            [stop_timer: :pacer, event: {:output, %Reset{}}]
+          if timer_is_running do
+            Membrane.Logger.info("stopping timer")
+            [stop_timer: :pacer]
           else
-            [event: {:output, %Reset{}}]
+            []
           end
 
-        {actions, %{state | queue: :queue.new(), timer: nil}}
+        {actions, %{state | queue: :queue.new(), timer_status: nil}}
 
       %{"type" => "response.audio.delta", "delta" => delta} ->
         Membrane.Logger.debug("Receiving response delta and enqueueing buffer")
@@ -115,13 +122,16 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
         buffer = %Membrane.Buffer{payload: audio_payload}
         new_queue = :queue.in(buffer, state.queue)
 
-        # Check if the timer is currently stopped (nil)
-        should_start_timer = is_nil(state.timer)
-
+        should_start_timer = is_nil(state.timer_status)
+        now = :os.system_time(:millisecond)
         # Determine the new state
         new_state =
           if should_start_timer do
-            %{state | timer: :active, queue: new_queue}
+            %{
+              state
+              | timer_status: :running,
+                queue: new_queue
+            }
           else
             %{state | queue: new_queue}
           end
@@ -129,17 +139,25 @@ defmodule MembraneOpenAI.OpenAIEndpoint do
         # Determine actions related to pacing
         pacer_actions =
           if should_start_timer do
-            [start_timer: {:pacer, state.pace_ms}]
+            [
+              start_timer: {
+                :pacer,
+                @interval
+              }
+            ]
           else
             []
           end
 
+        Membrane.Logger.info("response.audio.delta: should_start_timer: #{should_start_timer}")
         {pacer_actions, new_state}
 
       %{"type" => "response.audio.done"} ->
         # The stream is complete, nothing more to enqueue. The timer will stop when the queue empties.
         Membrane.Logger.info("Response audio stream ended.")
-        {[event: {:output, %Reset{}}], state}
+        now = :os.system_time(:millisecond)
+
+        {[], state}
 
       %{"type" => "response.audio_transcript.done", "transcript" => transcript} ->
         Membrane.Logger.info("AI transcription: #{transcript}")
