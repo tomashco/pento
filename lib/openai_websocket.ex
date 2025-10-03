@@ -13,38 +13,8 @@ defmodule MembraneOpenAI.OpenAIWebSocket do
 
   @impl true
   def handle_connect(conn, state) do
-    # Build the session.update event with custom options
-    # init_event = %{
-    #   "type" => "session.update",
-    #   "session" => %{
-    #     "instructions" =>
-    #       "Your name is JOSE and when the conversation starts you tell who you are.",
-    #     "type" => "realtime",
-    #     "tools" => [
-    #       %{
-    #         "type" => "function",
-    #         "name" => "get_horoscope",
-    #         "description" => "Get today's horoscope for an astrological sign.",
-    #         "parameters" => %{
-    #           "type" => "object",
-    #           "properties" => %{
-    #             "sign" => %{
-    #               "type" => "string",
-    #               "description" => "An astrological sign like Taurus or Aquarius"
-    #             }
-    #           },
-    #           "required" => ["sign"]
-    #         }
-    #       }
-    #     ]
-    #   }
-    # }
-
-    # :ok =
-    #   MembraneOpenAI.OpenAIWebSocket.send_frame(ws, vad_event)
-    # WebSockex.send_frame(self(), {:text, frame})
-    # |> IO.inspect(label: "dadas")
-    WebSockex.cast(self(), :send_frame)
+    # way to sent a frame to websocket from inside the handle_connect, sending through send_frame(self(), frame) will not work
+    # WebSockex.cast(self(), :send_frame)
 
     {:ok, state}
   end
@@ -53,30 +23,16 @@ defmodule MembraneOpenAI.OpenAIWebSocket do
     {:ok, state}
   end
 
-  def handle_cast(:send_frame, state) do
-    session_update =
-      %{
-        "type" => "session.update",
-        "session" => %{
-          "turn_detection" => %{
-            "type" => "server_vad",
-            "threshold" => 0.5,
-            "prefix_padding_ms" => 300,
-            "silence_duration_ms" => 500,
-            "create_response" => true,
-            "interrupt_response" => false
-          }
-        }
-      }
+  # def handle_cast(:send_frame, state) do
+  # session_update =
+  #   %{
+  #   }
 
-    state
-    |> IO.inspect(label: "handle_cast")
+  # frame =
+  #   Jason.encode!(session_update)
 
-    frame =
-      Jason.encode!(session_update)
-
-    {:reply, {:text, frame}, state}
-  end
+  # {:reply, {:text, frame}, state}
+  # end
 
   @impl true
   def handle_frame(frame, state) do
